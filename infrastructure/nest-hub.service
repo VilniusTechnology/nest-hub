@@ -1,0 +1,36 @@
+# sudo nano /etc/systemd/system/nest-hub.service
+#
+# sudo cp /home/tangerine/nest-hub/infrastructure/nest-hub.service /etc/systemd/system
+#
+# sudo systemctl enable nest-hub
+# sudo systemctl daemon-reload
+# sudo systemctl start nest-hub
+# sudo systemctl stop nest-hub
+# sudo systemctl restart nest-hub
+# sudo systemctl disable nest-hub
+#
+# sudo NODE_ENV='production' node server.js
+#
+# sudo journalctl -u nest-hub -f
+
+# https://hub.local/konfovent/set?mode=home
+
+[Unit]
+Description=TangerineNest controller
+After=network.target
+
+[Service]
+Environment=NODE_ENV=production
+Environment=PATH=/usr/bin:/usr/local/bin
+WorkingDirectory=/home/tangerine/nest-hub
+ExecStart=/usr/local/bin/node server.js
+Restart=always
+
+#User=root
+#Group=group
+
+[Install]
+WantedBy=multi-user.target
+
+# Setting up APP as a deamon https://stackoverflow.com/questions/4903570/how-does-one-start-a-node-js-server-as-a-daemon-process
+
