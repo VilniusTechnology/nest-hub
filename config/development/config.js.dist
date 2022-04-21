@@ -1,0 +1,34 @@
+let path = require('path');
+let os = require('os');
+let obs = null;
+
+
+require('dotenv').config({path: path.resolve(process.cwd(), 'config/production/.env')});
+
+const config = {
+    logger: {
+        level: 'debug',
+    },
+    host: 'hub.local',
+    hostname: 'hub',
+    secure_api: true,
+    mqtt: {
+       url: 'hub.local',
+       topicBase: 'zigbee2mqtt',
+       connectTimeout: 10000,
+       reconnectPeriod: 500,
+       username: '',
+       password: '',
+    },
+    komfovent: {
+     user: '',
+     password: '',
+     endpoint: '192.168.1.69',
+    },
+    storage: {
+            path: '/home/tangerine/tangerine-nest/mandarinas-settings',
+    },
+    activeEnv: process.env.NODE_ENV || 'production',
+};
+
+module.exports = config;

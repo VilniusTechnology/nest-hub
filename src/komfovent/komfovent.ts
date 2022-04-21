@@ -52,39 +52,25 @@ export class Komfovent {
             };
             // console.log('postConfig: ', postConfig);
             this.makeRequest(postConfig).then((result) => {
-                //@ts-ignore
-                // console.log('result: ', result.data);
                 // check that we are actually logged on
                 if (result === 'undefined' || result === '') {
                     reject({ error: true, result: 'http request failed', unit: ip });
+                    //@ts-ignore
+                } else if (result.data.indexOf('Incorrect password!') >= 0 || result.status > 200) {
+                    reject({ error: true, result: 'Wrong password for unit', unit: ip });
+                    //@ts-ignore
+                } else if (result.data.indexOf('value="Logout') >= 0 && result.status === 200) {
+                    // then assume we are logged on correctly
+                    reject({ error: false, result: 'logged on', unit: ip });
+                } else {
+                    // seems like something unknown failed, the beauty of screenscraping
+                    reject({ error: true, result: 'Something totally unknown happened with logon', unit: ip });
                 }
                 resolve(result);
             }).catch ( (error) => {
-                reject({ error: true, result: error.toString() });
+                reject({ error: true, result: error.toString()});
             });
         });
-
-    //     try {
-    //         result = await this.makeRequest(postConfig);
-    //       }
-    //       catch (error) {
-    //         return { error: true, result: error.toString() };
-    //       }
-    //       // check that we are actually logged on
-    //       if (result === 'undefined' || result === '') {
-    //         return { error: true, result: 'http request failed', unit: ip };
-    //       }
-    //       else if (result.data.indexOf('Incorrect password!') >= 0 || result.status > 200) {
-    //         return { error: true, result: 'Wrong password for unit', unit: ip };
-    //       }
-    //       else if (result.data.indexOf('value="Logout') >= 0 && result.status === 200) {
-    //         // then assume we are logged on correctly
-    //         return { error: false, result: 'logged on', unit: ip };
-    //       }
-    //       else {
-    //         // seems like something unknown failed, the beauty of screenscraping
-    //         return { error: true, result: 'Something totally unknown happened with logon', unit: ip };
-    //       }
     }
 
     public setMode(mode, ip) {
@@ -127,30 +113,18 @@ export class Komfovent {
                 //@ts-ignore
                 const mode = scraped('#omo').html();
 
+                if (typeof mode === 'undefined' || !mode) {
+                    reject({ error: true, result: 'Active mode not found', unit: ip });
+                }
+                else {
+                    // seems like we got the data without errors
+                    reject({ error: false, result: mode, unit: ip });
+                }
+
                 resolve(mode);
             }).catch ( (error) => {
                 reject({ error: true, result: error.toString() });
             });
-
-            // // no validate input, private
-            // try {
-            //     const scraped = this.getData('data', ip);
-            //     //@ts-ignore
-            //     const msgResult = scraped('div[data-selected="1"]').innerText();// ('div.control-1'); // .attr('data-selected');
-            //     console.dir(msgResult);
-            //     console.log(msgResult);
-
-            //     if (typeof msgResult === 'undefined' || !msgResult) {
-            //         return { error: true, result: 'Active mode not found', unit: ip };
-            //     }
-            //     else {
-            //         // seems like we got the data without errors
-            //         return { error: false, result: msgResult, unit: ip };
-            //     }
-            // }
-            // catch (error) {
-            //     return { error: true, result: 'Could not fetch data for mode: ' + error, unit: ip };
-            // }
         });
     }
 
@@ -165,53 +139,20 @@ export class Komfovent {
                 method: 'GET'
             };
             // get the page and scrape it
-            const result = this.makeRequest(getConfig).then((result) => {
+            this.makeRequest(getConfig).then((result) => {
                 // load scraper and scrape recieved content
-                const scraper = require('cheerio');
                 //@ts-ignore
-                resolve(scraper.load(result.data));
+                if (result !== 'undefined' && result && !result.error && result.data) {
+                    const scraper = require('cheerio');
+                    //@ts-ignore
+                    resolve(scraper.load(result.data));
+                } else {
+                    //@ts-ignore
+                    reject({error: true, result:'Could not fetch page: ' + result.result});
+                }   
             }).catch ( (error) => {
                 reject({ error: true, result: error.toString() });
             });
         });
-
-
-        // // validate results before parsing
-        // //@ts-ignore
-        // if (result !== 'undefined' && result && !result.error && result.data) {
-        //     // load scraper and scrape recieved content
-        //     const scraper = require('cheerio');
-        //     //@ts-ignore
-        //     const scraped = scraper.load(result.data);
-        //     return scraped;
-        // }
-        // else {
-        //     //@ts-ignore
-        //     throw new Error('Could not fetch page: ' + result.result);
-        // }
-    }
-
-    public async getId (name, ip) {
-        // validate input
-        if (typeof name !== 'string' || !name) {
-            return ({ error: true, result: 'Empty ID recieved, quitting', unit: ip });
-        }
-        if (typeof ip !== 'string' || !ip) {
-            return ({ error: true, result: 'Empty IP recieved, quitting', unit: ip });
-        }
-        // try {
-        //     const scraped = await this.getData(name, ip);
-        //     const msgResult = scraped('#' + name).text().trim();
-        //     if (typeof msgResult === 'undefined' || !msgResult) {
-        //         return { error: true, result: 'ID not found', unit: ip };
-        //     }
-        //     else {
-        //         // seems like we got the data without errors
-        //         return { error: false, result: msgResult, unit: ip };
-        //     }
-        // }
-        // catch (error) {
-        //     return { error: true, result: 'Could not fetch data: ' + error, unit: ip };
-        // }
     }
 }

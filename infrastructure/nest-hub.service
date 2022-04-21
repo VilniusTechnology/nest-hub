@@ -1,6 +1,7 @@
 # sudo nano /etc/systemd/system/nest-hub.service
 #
-# sudo cp /home/tangerine/nest-hub/infrastructure/nest-hub.service /etc/systemd/system
+# sudo cp /home/tangerine/tangerine-hub/infrastructure/nest-hub.service /etc/systemd/system
+# sudo rm -rf /etc/systemd/system/nest-hub.service
 #
 # sudo systemctl enable nest-hub
 # sudo systemctl daemon-reload
@@ -8,6 +9,7 @@
 # sudo systemctl stop nest-hub
 # sudo systemctl restart nest-hub
 # sudo systemctl disable nest-hub
+# sudo systemctl status nest-hub
 #
 # sudo NODE_ENV='production' node server.js
 #
@@ -16,13 +18,13 @@
 # https://hub.local/konfovent/set?mode=home
 
 [Unit]
-Description=TangerineNest controller
+Description=TangerineNest hub
 After=network.target
 
 [Service]
 Environment=NODE_ENV=production
 Environment=PATH=/usr/bin:/usr/local/bin
-WorkingDirectory=/home/tangerine/nest-hub
+WorkingDirectory=/home/tangerine/tangerine-hub
 ExecStart=/usr/local/bin/node server.js
 Restart=always
 
