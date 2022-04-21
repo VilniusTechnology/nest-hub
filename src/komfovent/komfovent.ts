@@ -24,33 +24,28 @@ export class Komfovent {
 
     public makeRequest(postConfig) {
         return new Promise((resolve, reject) => {
-            axios.post(postConfig.url, postConfig.data)
-              .then(function (response) {
-                // console.log(response);
+            axios.post(postConfig.url, postConfig.data).then((response) => {
                 resolve(response);
-              })
-              .catch((error) => {
-                // console.log(error);
+              }).catch((error) => {
                 reject(error);
               });
         });
     }
 
-    public logon (username, password, ip) {
+    public logon(username, password, ip) {
         return new Promise((resolve, reject) => {
             // validate input
             if (typeof username !== 'string' || !username || typeof password !== 'string' || !password) {
-                return ({ error: true, result: 'Empty username/password received, quitting' });
+                reject({ error: true, result: 'Empty username/password received, quitting' });
             }
             if (typeof ip !== 'string' || !ip) {
-                return ({ error: true, result: 'Empty IP received, quitting' });
+                reject({ error: true, result: 'Empty IP received, quitting' });
             }
             const postConfig = {
                 url: 'http://' + ip,
                 method: 'POST',
                 data: '1=' + username + '&' + '2=' + password
             };
-            // console.log('postConfig: ', postConfig);
             this.makeRequest(postConfig).then((result) => {
                 // check that we are actually logged on
                 if (result === 'undefined' || result === '') {
@@ -59,12 +54,6 @@ export class Komfovent {
                 } else if (result.data.indexOf('Incorrect password!') >= 0 || result.status > 200) {
                     reject({ error: true, result: 'Wrong password for unit', unit: ip });
                     //@ts-ignore
-                } else if (result.data.indexOf('value="Logout') >= 0 && result.status === 200) {
-                    // then assume we are logged on correctly
-                    reject({ error: false, result: 'logged on', unit: ip });
-                } else {
-                    // seems like something unknown failed, the beauty of screenscraping
-                    reject({ error: true, result: 'Something totally unknown happened with logon', unit: ip });
                 }
                 resolve(result);
             }).catch ( (error) => {
@@ -77,10 +66,10 @@ export class Komfovent {
         return new Promise((resolve, reject) => {
             // validate input
             if (typeof mode.code !== 'string' || !mode) {
-                return ({ error: true, result: 'Empty mode received, quitting', unit: ip });
+                reject({ error: true, result: 'Empty mode received, quitting', unit: ip });
             }
             if (typeof ip !== 'string' || !ip) {
-                return ({ error: true, result: 'Empty IP received, quitting' });
+                reject({ error: true, result: 'Empty IP received, quitting' });
             }
             // defining message needed by c6 to switch modes
             const postConfig = {
@@ -89,20 +78,11 @@ export class Komfovent {
                 data: mode.code
             };
             // make request for mode change
-            const result = this.makeRequest(postConfig).then((result) => {
+            this.makeRequest(postConfig).then((result) => {
                 resolve(result);
             }).catch ( (error) => {
                 reject({ error: true, result: error.toString() });
             });
-
-            // //@ts-ignore
-            // if (result.status === 200 && result.data.indexOf('c6') > 0) {
-            //     // then assuming it was ok, right http and the weird standard body response from C6 controller
-            //     return { error: false, result: mode.name };
-            // }
-            // else {
-            //     return { error: true, result: 'Could not set mode. Non existing? ' + mode.name , unit: ip};
-            // }
         });
     }
 
@@ -112,13 +92,11 @@ export class Komfovent {
             const result = this.getData('data', ip).then((scraped) => {
                 //@ts-ignore
                 const mode = scraped('#omo').html();
-
                 if (typeof mode === 'undefined' || !mode) {
                     reject({ error: true, result: 'Active mode not found', unit: ip });
-                }
-                else {
+                } else {
                     // seems like we got the data without errors
-                    reject({ error: false, result: mode, unit: ip });
+                    resolve(mode);
                 }
 
                 resolve(mode);

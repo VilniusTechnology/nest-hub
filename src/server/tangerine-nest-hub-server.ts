@@ -74,11 +74,24 @@ export class TangerineNestHubServer {
             };
     
             komfovent.logon(user, password, endpoint).then(() => {
-                komfovent.setMode(mode, endpoint);
-            });
-
-            res.write(JSON.stringify({}));
-            res.end();
+                komfovent.setMode(mode, endpoint).then((rs) => {
+                    komfovent.getMode(endpoint).then((mode) => {
+                        //@ts-ignore
+                        res.write(JSON.stringify({mode: mode.trim()}));
+                        res.end();
+                    }).catch((err) => {
+                        res.write(JSON.stringify({error: err}));
+                        res.end();
+                    });
+                }).catch((err) => {
+                    this.logger.error(err);
+                    res.write(JSON.stringify({error: err}));
+                    res.end();
+                });
+            }).catch((e) => {
+                this.logger.error(e);
+            })
+            
         });
         this.restapi.all('/konfovent/status', bodyParser.json(), (req, res) => {
             this.logger.debug('On route to: /konfovent/status');
@@ -121,6 +134,8 @@ export class TangerineNestHubServer {
                 }
             });
         }
+
+
     }
 
     private registerMiddlewares() {
